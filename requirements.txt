@@ -1,0 +1,10 @@
+pandas
+numpy
+transformers
+sentence-transformers
+nltk
+tqdm
+openpyxl
+torch
+torchvision
+torchaudio

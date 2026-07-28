@@ -1,0 +1,63 @@
+Ti viene fornito un comando in italiano in linguaggio naturale e un'immagine corrispondente che raffigura un ambiente domestico. Il tuo compito è convertire il comando in una **rappresentazione semantica strutturata e fondata** sotto forma di **strutture predicato-argomento**.
+
+Ciò significa che devi:
+    - Identificare i **frame** semantici espressi nel comando (es., MOTION, TAKING, BRINGING, LOCATING, PLACING, CHANGE_OPERATIONAL_STATE, ecc.)
+    - Per ogni frame, estrai un elenco di **elementi frame**, visivamente ancorati se possibile.
+
+L'output deve essere una **lista di dizionari**, uno per frame. Ogni dizionario contiene:
+    - \"frame\": il nome del frame (stringa), seguendo le convenzioni FrameNet.
+    - \"elements\": un elenco di dizionari, ciascuno con:
+        - \"name\": il ruolo dell'elemento frame (es., Theme, Goal, Agent, Beneficiary, ecc.)
+        - \"surface\": o
+            - l'intervallo di testo esatto del comando. Deve essere la testa semantica, cioè la parola che si riferisce all'oggetto.
+            - o un tag simbolico tra <ON> e <OFF> se il frame si riferisce a un cambiamento di stato operativo.
+        - \"bbox_2d\": o
+            - una lista di quattro interi [x1, y1, x2, y2] che rappresenta il riquadro di delimitazione di un oggetto visibile nell'immagine
+            - o un tag simbolico tra <ROBOT>, <PERSON>, <ROOM>, <POSITION>, <STATUS>, <MISSING> e <ITEM>
+        - \"reference\": l'intervallo di testo a cui si riferisce il pronome in \"surface\".
+
+### Linee guida importanti:
+    - Annota solo ciò che è **visivamente presente** nell'immagine ed è rilevante per il comando (come elemento frame).
+    - Utilizza <MISSING> se l'oggetto a cui si fa riferimento **non può essere visto**.
+    - Utilizza <ROBOT> per il robot e <PERSON> per un destinatario umano.
+    - Utilizza <POSITION> quando il target è un riferimento spaziale astratto come \"lì\" o \"qui\".
+    - Utilizza <STATUS> per le espressioni dello stato operativo (ad esempio, \"accendi\", \"spengi\").
+    - Utilizza <ON> e <OFF> per la \"surface\" delle espressioni dello stato operativo.
+    - Utilizza <ITEM> per riferimenti a oggetti non specificati o deittici (ad esempio, pronomi come \"questo\", \"questa\" quando si fa riferimento a un oggetto   visibile).
+    - Tutti i tag devono essere scritti **esattamente come indicati**, senza caratteri aggiunti o errori di battitura.
+    - Estrarre sempre gli **span di superficie** letteralmente dal comando di input.
+    - L'output deve essere in formato **JSON valido** e formattato come **una singola riga**.
+
+---
+### Esempi:
+**Comando:**  
+<foto>  
+puoi andare nella cucina per favore
+**Output:**  
+[{'frame': 'MOTION', 'elements': [{'name': 'Goal', 'surface': 'cucina', 'bbox_2d': '<ROOM>'}]}]
+---
+**Comando:**  
+<foto>  
+portami la bottiglia
+**Output:**  
+[{'frame': 'BRINGING', 'elements': [{'name': 'Theme', 'surface': 'bottiglia', 'bbox_2d': [210, 612, 780, 830]}, {'name': 'Beneficiary', 'surface': 'mi', 'bbox_2d': '<PERSON>'}]}]
+---
+**Comando:**  
+<foto>  
+prendi il portafoglio dal tavolo
+**Output:**  
+[{'frame': 'TAKING', 'elements': [{'name': 'Theme', 'surface': 'portafoglio', 'bbox_2d': '<MISSING>'}, {'name': 'Source', 'surface': 'tavolo', 'bbox_2d': [480, 660, 960, 900]}]}]
+---
+**Comando:**  
+<foto>  
+accendi la tv
+**Output:**  
+[{'frame': 'CHANGE_OPERATIONAL_STATE', 'elements': [{'name': 'Operational_state', 'surface': '<ON>', 'bbox_2d': '<STATUS>'}, {'name': 'Device', 'surface': 'tv', 'bbox_2d': [251, 337, 832, 708]}]}]
+---
+**Comando:**  
+<foto>  
+prendi la mela e portala in salotto
+**Output:**  
+[{'frame': 'TAKING', 'elements': [{'name': 'Theme', 'surface': 'mela', 'bbox_2d': [230, 412, 670, 815]}]}, {'frame': 'BRINGING', 'elements': [{'name': 'Theme', 'surface': 'la', 'bbox_2d': '<MISSING>', 'reference': 'mela'}, {'name': 'Goal', 'surface': 'salotto', 'bbox_2d': '<MISSING>'}]}]
+---
+Ora fai lo stesso per il seguente esempio:

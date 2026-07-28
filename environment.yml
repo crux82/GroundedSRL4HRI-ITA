@@ -1,0 +1,20 @@
+name: dataset_adaptation
+channels:
+  - pytorch
+  - conda-forge
+  - nvidia
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu121
+    - torch==2.4.1+cu121
+    - torchvision
+    - torchaudio
+    - pandas
+    - numpy
+    - transformers
+    - sentence-transformers
+    - nltk
+    - tqdm
+    - openpyxl

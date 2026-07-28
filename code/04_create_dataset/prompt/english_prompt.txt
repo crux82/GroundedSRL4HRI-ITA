@@ -1,0 +1,62 @@
+You are given a natural language Italian command and a corresponding image depicting a domestic environment. Your task is to convert the command into a **structured, grounded semantic representation** in the form of **predicate-argument structures**.
+
+This means you must:
+    - Identify the semantic **frames** expressed in the command (e.g., MOTION, TAKING, BRINGING, LOCATING, PLACING, CHANGE_OPERATIONAL_STATE, etc.) 
+    - For each frame, extract a list of **frame elements**, grounded visually whenever possible.
+
+Your output must be a **list of dictionaries**, one per frame. Each dictionary contains:
+    - \"frame\": the name of the frame (string), following FrameNet conventions.
+    - \"elements\": a list of dictionaries, each with:
+        - \"name\": the role of the frame element (e.g., Theme, Goal, Agent, Beneficiary, etc.)
+        - \"surface\": either
+            - the exact text span from the command. It must be the semantic head, i.e., the word referring to the object.
+            - or a symbolic tag among <ON> and <OFF> if the frame refers to an operational change of state.
+        - \"bbox_2d\": either
+            - a list of four integers [x1, y1, x2, y2] representing a visible object's bounding box in the image
+            - or a symbolic tag among <ROBOT>, <PERSON>, <ROOM>, <POSITION>, <STATUS>, <MISSING> and <ITEM>
+        - \"reference\": the text span that the pronoun in \"surface\" refers to.
+
+### Important guidelines:
+    - Only annotate what is **visually present** in the image and it is relevant for the command (as a frame element).
+    - Use <MISSING> if the referred object **cannot be seen**.
+    - Use <ROBOT> for the robot, and <PERSON> for a human addressee.
+    - Use <POSITION> when the target is an abstract spatial reference like \"lì\" or \"qui\".
+    - Use <STATUS> for expressions of operational state (e.g., \"accendi\", \"spengi\").
+    - Use <ON> and <OFF> for \"surface\" of expressions of operational state.
+    - Use <ITEM> for references to unspecified or deictic objects (e.g., pronouns like \"questo\", \"questa\" when referring to a visible item).
+    - All tags must be typed **exactly as given**, with no added characters or typos.
+    - Always extract **surface** spans literally from the input command.
+    - Your output must be in **valid JSON**, and formatted as **a single line**.
+---
+### Examples:
+**Command:**
+<photo>  
+puoi andare nella cucina per favore
+**Output:**  
+[{'frame': 'MOTION', 'elements': [{'name': 'Goal', 'surface': 'cucina', 'bbox_2d': '<ROOM>'}]}]
+---
+**Command:**  
+<photo>  
+portami la bottiglia
+**Output:**  
+[{'frame': 'BRINGING', 'elements': [{'name': 'Theme', 'surface': 'bottiglia', 'bbox_2d': [210, 612, 780, 830]}, {'name': 'Beneficiary', 'surface': 'mi', 'bbox_2d': '<PERSON>'}]}]
+---
+**Command:**  
+<photo>  
+prendi il portafoglio dal tavolo
+**Output:**
+[{'frame': 'TAKING', 'elements': [{'name': 'Theme', 'surface': 'portafoglio', 'bbox_2d': '<MISSING>'}, {'name': 'Source', 'surface': 'tavolo', 'bbox_2d': [480, 660, 960, 900]}]}]
+---
+**Command:**  
+<photo>  
+accendi la tv
+**Output:**  
+[{'frame': 'CHANGE_OPERATIONAL_STATE', 'elements': [{'name': 'Operational_state', 'surface': '<ON>', 'bbox_2d': '<STATUS>'}, {'name': 'Device', 'surface': 'tv', 'bbox_2d': [251, 337, 832, 708]}]}]
+---
+**Command:**  
+<photo>  
+prendi la mela e portala in salotto
+**Output:**  
+[{'frame': 'TAKING', 'elements': [{'name': 'Theme', 'surface': 'mela', 'bbox_2d': [230, 412, 670, 815]}]}, {'frame': 'BRINGING', 'elements': [{'name': 'Theme', 'surface': 'la', 'bbox_2d': '<MISSING>', 'reference': 'mela'}, {'name': 'Goal', 'surface': 'salotto', 'bbox_2d': '<MISSING>'}]}]
+---
+Now do the same for the following example:
